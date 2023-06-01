@@ -1,1 +1,6 @@
 dl
+ext/.stamp_*
+ext/gcc
+ext/cmsis
+ext/cmsis-nn
+ext/tfl
