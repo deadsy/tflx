@@ -34,8 +34,15 @@ TFL_FILE = tfl-$(TFL_VER).tar.gz
 TFL_TGZ = $(DL_DIR)/$(TFL_FILE)
 TFL_DIR = $(TOP)/ext/tfl
 
+# stm cube library
+CUBE_VER = 1.27.1
+CUBE_URL = https://github.com/STMicroelectronics/STM32CubeF4/archive/refs/tags/v$(CUBE_VER).tar.gz
+CUBE_FILE = cube-$(CUBE_VER).tar.gz
+CUBE_TGZ = $(DL_DIR)/$(CUBE_FILE)
+CUBE_DIR = $(TOP)/ext/cube
+
 .PHONY: all
-all: .stamp_gcc .stamp_cmsis .stamp_nn .stamp_tfl
+all: .stamp_gcc .stamp_cmsis .stamp_nn .stamp_tfl .stamp_cube
 
 .PHONY: clean
 clean:
@@ -44,33 +51,30 @@ clean:
 	-rm -rf $(CMSIS_DIR)
 	-rm -rf $(NN_DIR)
 	-rm -rf $(TFL_DIR)
+	-rm -rf $(CUBE_DIR)
 	-rm .stamp_*
 
 $(GCC_TXZ):
 	mkdir -p $(DL_DIR)
 	wget $(GCC_URL) -O $(GCC_TXZ)
 
-$(CMSIS_TGZ):
-	mkdir -p $(DL_DIR)
-	wget $(CMSIS_URL) -O $(CMSIS_TGZ)
-
-$(NN_TGZ):
-	mkdir -p $(DL_DIR)
-	wget $(NN_URL) -O $(NN_TGZ)
-
-$(TFL_TGZ):
-	mkdir -p $(DL_DIR)
-	wget $(TFL_URL) -O $(TFL_TGZ)
-
 .stamp_gcc: $(GCC_TXZ)
 	mkdir -p $(GCC_DIR)
 	tar -C $(GCC_DIR) -Jxf $(GCC_TXZ) --strip-components 1
 	touch $@
 
+$(CMSIS_TGZ):
+	mkdir -p $(DL_DIR)
+	wget $(CMSIS_URL) -O $(CMSIS_TGZ)
+
 .stamp_cmsis: $(CMSIS_TGZ)
 	mkdir -p $(CMSIS_DIR)
 	tar -C $(CMSIS_DIR) -zxf $(CMSIS_TGZ) --strip-components 1
 	touch $@
+
+$(NN_TGZ):
+	mkdir -p $(DL_DIR)
+	wget $(NN_URL) -O $(NN_TGZ)
 
 .stamp_nn: $(NN_TGZ) .stamp_gcc
 	mkdir -p $(NN_DIR)
@@ -80,6 +84,10 @@ $(TFL_TGZ):
 	PATH=$(GCC_BIN):${PATH} cmake -GNinja -DCMAKE_TOOLCHAIN_FILE=arm-none-eabi-gcc.cmake -S $(NN_DIR) -B $(NN_BUILD)
 	ninja -C $(NN_BUILD)
 	touch $@
+
+$(TFL_TGZ):
+	mkdir -p $(DL_DIR)
+	wget $(TFL_URL) -O $(TFL_TGZ)
 
 .stamp_tfl: $(TFL_TGZ) .stamp_gcc
 	mkdir -p $(TFL_DIR)
@@ -92,4 +100,13 @@ $(TFL_TGZ):
 		CC=$(GCC_BIN)/arm-none-eabi-gcc \
 		AR=$(GCC_BIN)/arm-none-eabi-ar \
 		libtflm
+	touch $@
+
+$(CUBE_TGZ):
+	mkdir -p $(DL_DIR)
+	wget $(CUBE_URL) -O $(CUBE_TGZ)
+
+.stamp_cube: $(CUBE_TGZ)
+	mkdir -p $(CUBE_DIR)
+	tar -C $(CUBE_DIR) -zxf $(CUBE_TGZ) --strip-components 1
 	touch $@
