@@ -36,10 +36,11 @@ SRC += $(TARGET_DIR)/main.c \
 COMMON_DIR = $(TOP)/common
 SRC += $(COMMON_DIR)/logging.c \
 	$(COMMON_DIR)/debounce.c \
-	$(COMMON_DIR)/syscalls.c \
-	$(COMMON_DIR)/rand.c \
 	$(COMMON_DIR)/rtt/SEGGER_RTT.c \
 	$(COMMON_DIR)/rtt/SEGGER_RTT_printf.c \
+
+#	$(COMMON_DIR)/syscalls.c \
+#	$(COMMON_DIR)/rand.c \
 
 OBJ = $(patsubst %.c, %.o, $(SRC))
 OBJ += $(TARGET_DIR)/start.o
@@ -55,15 +56,11 @@ INCLUDE += -I$(COMMON_DIR)/rtt
 
 # defines
 DEFINE = -DSTM32F407xx
-DEFINE += -DSTDIO_RTT
+DEFINE += -DSTDIO_SERIAL
 
 # linker flags
 LDSCRIPT = stm32f407vg_flash.ld
 X_LDFLAGS = -T$(LDSCRIPT) -Wl,-Map,$(OUTPUT).map -Wl,--gc-sections
-
-# unused parameters in the HAL code
-X_CFLAGS += -Wno-unused-parameter
-X_CFLAGS += -Wno-strict-prototypes
 
 .S.o:
 	$(X_GCC) $(INCLUDE) $(DEFINE) $(X_CFLAGS) -c $< -o $@
@@ -73,7 +70,7 @@ X_CFLAGS += -Wno-strict-prototypes
 .PHONY: all clean
 
 all: $(OBJ)
-	$(X_GCC) $(X_CFLAGS) $(X_LDFLAGS) $(OBJ) -lm -o $(OUTPUT)
+	$(X_GCC) $(X_CFLAGS) $(X_LDFLAGS) $(OBJ) -o $(OUTPUT)
 	$(X_OBJCOPY) -O binary $(OUTPUT) $(OUTPUT).bin
 
 clean:

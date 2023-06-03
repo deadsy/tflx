@@ -11,6 +11,9 @@ MB997C Board
 #include "utils.h"
 #include "io.h"
 
+#define NANOPRINTF_IMPLEMENTATION
+#include "nanoprintf.h"
+
 #define DEBUG
 #include "logging.h"
 
@@ -28,10 +31,6 @@ static const struct gpio_info gpios[] = {
 	// serial port (usart2 function)
 	{IO_UART_TX, GPIO_MODER_AF, GPIO_OTYPER_PP, GPIO_OSPEEDR_HI, GPIO_PUPD_NONE, GPIO_AF7, 0},
 	{IO_UART_RX, GPIO_MODER_AF, GPIO_OTYPER_PP, GPIO_OSPEEDR_HI, GPIO_PUPD_NONE, GPIO_AF7, 0},
-	// pwm channels (tim3 function)
-	{IO_PWM_0, GPIO_MODER_AF, GPIO_OTYPER_PP, GPIO_OSPEEDR_HI, GPIO_PUPD_NONE, GPIO_AF2, 0},
-	{IO_PWM_1, GPIO_MODER_AF, GPIO_OTYPER_PP, GPIO_OSPEEDR_HI, GPIO_PUPD_NONE, GPIO_AF2, 0},
-	{IO_PWM_2, GPIO_MODER_AF, GPIO_OTYPER_PP, GPIO_OSPEEDR_HI, GPIO_PUPD_NONE, GPIO_AF2, 0},
 };
 
 //-----------------------------------------------------------------------------
@@ -144,7 +143,7 @@ uint32_t debounce_input(void) {
 }
 
 //-----------------------------------------------------------------------------
-// SLIP control port (on USART2)
+// Console serial port (on USART2)
 
 struct usart_cfg serial_cfg = {
 	.base = USART2_BASE,
@@ -154,10 +153,15 @@ struct usart_cfg serial_cfg = {
 	.stop = 1,
 };
 
-struct usart_drv slip_serial;
+struct usart_drv serial_drv;
 
 void USART2_IRQHandler(void) {
-	usart_isr(&slip_serial);
+	usart_isr(&serial_drv);
+}
+
+static void console_putc(int c, void *ctx) {
+	(void)ctx;
+	usart_putc(&serial_drv, c);
 }
 
 //-----------------------------------------------------------------------------
@@ -186,7 +190,7 @@ int main(void) {
 		goto exit;
 	}
 	// serial port init
-	rc = usart_init(&slip_serial, &serial_cfg);
+	rc = usart_init(&serial_drv, &serial_cfg);
 	if (rc != 0) {
 		DBG("usart_init failed %d\r\n", rc);
 		goto exit;
@@ -197,7 +201,11 @@ int main(void) {
 
 	DBG("init good\r\n");
 
-	while(1);
+	npf_pprintf(console_putc, NULL, "\r\n");
+	for (int i = 0; i < 0x10000; i++) {
+		npf_pprintf(console_putc, NULL, "loop 0x%08x\r\n", i);
+	}
+	while (1) ;
 
  exit:
 	while (1) ;
