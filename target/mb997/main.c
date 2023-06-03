@@ -201,10 +201,13 @@ int main(void) {
 
 	DBG("init good\r\n");
 
+	float val = 1.234f;
 	npf_pprintf(console_putc, NULL, "\r\n");
-	for (int i = 0; i < 0x10000; i++) {
-		npf_pprintf(console_putc, NULL, "loop 0x%08x\r\n", i);
+	for (int i = 0; i < 10; i++) {
+		npf_pprintf(console_putc, NULL, "loop %d %f\r\n", i, val);
+		val += 0.1f;
 	}
+
 	while (1) ;
 
  exit:
