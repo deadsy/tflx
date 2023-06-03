@@ -31,6 +31,8 @@ See http://www.eistec.se/docs/contiki/a01137_source.html
 extern struct usart_drv serial_drv;
 
 static _ssize_t io_read_r(struct _reent *ptr, int fd, void *buf, size_t cnt) {
+	(void)ptr;
+	(void)fd;
 	static int prev_char = -1;
 	char *cbuf = buf;
 	unsigned int i;
@@ -90,6 +92,8 @@ static _ssize_t io_read_r(struct _reent *ptr, int fd, void *buf, size_t cnt) {
 }
 
 static _ssize_t io_write_r(struct _reent *ptr, int fd, const void *buf, size_t cnt) {
+	(void)ptr;
+	(void)fd;
 	unsigned i;
 	const char *cbuf = buf;
 	for (i = 0; i < cnt; i++) {
@@ -108,10 +112,16 @@ static _ssize_t io_write_r(struct _reent *ptr, int fd, const void *buf, size_t c
 static const char crlf[] = "\r\n";
 
 static _ssize_t io_read_r(struct _reent *ptr, int fd, void *buf, size_t cnt) {
+	(void)ptr;
+	(void)fd;
+	(void)buf;
+	(void)cnt;
 	return 0;
 }
 
 static _ssize_t io_write_r(struct _reent *ptr, int fd, const void *buf, size_t cnt) {
+	(void)ptr;
+	(void)fd;
 	unsigned int i;
 	const char *cbuf = buf;
 	for (i = 0; i < cnt; i++) {
@@ -139,6 +149,9 @@ char **environ = __env;
 // file operations
 
 int _open_r(struct _reent *ptr, const char *file, int flags, int mode) {
+	(void)file;
+	(void)flags;
+	(void)mode;
 	DBG("%s: %s() line %d\r\n", __FILE__, __func__, __LINE__);
 	// TODO
 	ptr->_errno = ENOENT;
@@ -146,6 +159,7 @@ int _open_r(struct _reent *ptr, const char *file, int flags, int mode) {
 }
 
 int _close_r(struct _reent *ptr, int fd) {
+	(void)fd;
 	DBG("%s: %s() line %d\r\n", __FILE__, __func__, __LINE__);
 	// TODO
 	ptr->_errno = EBADF;
@@ -198,6 +212,8 @@ int _fstat_r(struct _reent *ptr, int fd, struct stat *pstat) {
 }
 
 off_t _lseek_r(struct _reent *ptr, int fd, off_t pos, int whence) {
+	(void)pos;
+	(void)whence;
 	DBG("%s: %s() line %d\r\n", __FILE__, __func__, __LINE__);
 	switch (fd) {
 	case 0:
@@ -232,12 +248,16 @@ int _isatty(int fd) {
 }
 
 int _link_r(struct _reent *ptr, const char *old, const char *new) {
+	(void)old;
+	(void)new;
 	DBG("%s: %s() line %d\r\n", __FILE__, __func__, __LINE__);
 	ptr->_errno = EMLINK;
 	return -1;
 }
 
 int _stat_r(struct _reent *ptr, const char *file, struct stat *pstat) {
+	(void)ptr;
+	(void)file;
 	// say it's a character file
 	DBG("%s: %s() line %d\r\n", __FILE__, __func__, __LINE__);
 	pstat->st_mode = S_IFCHR;
@@ -245,6 +265,7 @@ int _stat_r(struct _reent *ptr, const char *file, struct stat *pstat) {
 }
 
 int _unlink_r(struct _reent *ptr, const char *file) {
+	(void)file;
 	DBG("%s: %s() line %d\r\n", __FILE__, __func__, __LINE__);
 	ptr->_errno = ENOENT;
 	return -1;
@@ -281,11 +302,15 @@ void *_sbrk_r(struct _reent *ptr, ptrdiff_t incr) {
 // process control
 
 void _exit(int status) {
+	(void)status;
 	DBG("%s: %s() line %d\r\n", __FILE__, __func__, __LINE__);
 	while (1) ;
 }
 
 int _execve_r(struct _reent *ptr, const char *name, char *const argv[], char *const env[]) {
+	(void)name;
+	(void)argv;
+	(void)env;
 	DBG("%s: %s() line %d\r\n", __FILE__, __func__, __LINE__);
 	ptr->_errno = ENOMEM;
 	return -1;
@@ -298,18 +323,22 @@ int _fork_r(struct _reent *ptr) {
 }
 
 int _wait_r(struct _reent *ptr, int *status) {
+	(void)status;
 	DBG("%s: %s() line %d\r\n", __FILE__, __func__, __LINE__);
 	ptr->_errno = ECHILD;
 	return -1;
 }
 
 int _kill_r(struct _reent *ptr, int pid, int sig) {
+	(void)pid;
+	(void)sig;
 	DBG("%s: %s() line %d\r\n", __FILE__, __func__, __LINE__);
 	ptr->_errno = EINVAL;
 	return -1;
 }
 
 int _getpid_r(struct _reent *ptr) {
+	(void)ptr;
 	DBG("%s: %s() line %d\r\n", __FILE__, __func__, __LINE__);
 	return 1;
 }
@@ -318,6 +347,7 @@ int _getpid_r(struct _reent *ptr) {
 // time
 
 clock_t _times_r(struct _reent *ptr, struct tms *ptms) {
+	(void)ptms;
 	DBG("%s: %s() line %d\r\n", __FILE__, __func__, __LINE__);
 	ptr->_errno = EACCES;
 	return -1;

@@ -6,13 +6,12 @@ MB997C Board
 */
 //-----------------------------------------------------------------------------
 
+#include <stdio.h>
+
 #include "stm32f4_soc.h"
 #include "debounce.h"
 #include "utils.h"
 #include "io.h"
-
-#define NANOPRINTF_IMPLEMENTATION
-#include "nanoprintf.h"
 
 #define DEBUG
 #include "logging.h"
@@ -159,11 +158,6 @@ void USART2_IRQHandler(void) {
 	usart_isr(&serial_drv);
 }
 
-static void console_putc(int c, void *ctx) {
-	(void)ctx;
-	usart_putc(&serial_drv, c);
-}
-
 //-----------------------------------------------------------------------------
 
 int main(void) {
@@ -202,9 +196,9 @@ int main(void) {
 	DBG("init good\r\n");
 
 	float val = 1.234f;
-	npf_pprintf(console_putc, NULL, "\r\n");
+	printf("\n");
 	for (int i = 0; i < 10; i++) {
-		npf_pprintf(console_putc, NULL, "loop %d %f\r\n", i, val);
+		printf("loop %d %f\n", i, val);
 		val += 0.1f;
 	}
 

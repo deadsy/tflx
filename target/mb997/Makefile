@@ -38,8 +38,8 @@ SRC += $(COMMON_DIR)/logging.c \
 	$(COMMON_DIR)/debounce.c \
 	$(COMMON_DIR)/rtt/SEGGER_RTT.c \
 	$(COMMON_DIR)/rtt/SEGGER_RTT_printf.c \
+	$(COMMON_DIR)/syscalls.c \
 
-#	$(COMMON_DIR)/syscalls.c \
 #	$(COMMON_DIR)/rand.c \
 
 OBJ = $(patsubst %.c, %.o, $(SRC))
