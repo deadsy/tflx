@@ -6,6 +6,7 @@ OUTPUT = tflx
 HAL_DIR = $(TOP)/ext/cube/Drivers/STM32F4xx_HAL_Driver
 CMSIS_DIR = $(TOP)/ext/cube/Drivers/CMSIS
 CMSIS_STM32F4_DIR = $(CMSIS_DIR)/Device/ST/STM32F4xx
+TENSORFLOW_DIR = $(TOP)/ext/tfl/build
 
 SRC += $(HAL_DIR)/Src/stm32f4xx_hal.c \
 	$(HAL_DIR)/Src/stm32f4xx_hal_rcc.c \
@@ -42,7 +43,12 @@ SRC += $(COMMON_DIR)/logging.c \
 
 #	$(COMMON_DIR)/rand.c \
 
+# application
+APP_DIR = $(TOP)/app
+CPP_SRC += $(APP_DIR)/tfl_main.cc \
+
 OBJ = $(patsubst %.c, %.o, $(SRC))
+OBJ += $(patsubst %.cc, %.o, $(CPP_SRC))
 OBJ += $(TARGET_DIR)/start.o
 
 # include paths
@@ -53,6 +59,9 @@ INCLUDE += -I$(CMSIS_STM32F4_DIR)/Include
 INCLUDE += -I$(TARGET_DIR)
 INCLUDE += -I$(COMMON_DIR)
 INCLUDE += -I$(COMMON_DIR)/rtt
+INCLUDE += -I$(TENSORFLOW_DIR)
+INCLUDE += -I$(TENSORFLOW_DIR)/third_party/flatbuffers/include
+INCLUDE += -I$(TENSORFLOW_DIR)/third_party/gemmlowp
 
 # defines
 DEFINE = -DSTM32F407xx
@@ -62,15 +71,20 @@ DEFINE += -DSTDIO_SERIAL
 LDSCRIPT = stm32f407vg_flash.ld
 X_LDFLAGS = -T$(LDSCRIPT) -Wl,-Map,$(OUTPUT).map -Wl,--gc-sections
 
+LIB_PATH += -L$(TENSORFLOW_DIR)/gen
+LIB += -ltflm
+
 .S.o:
 	$(X_GCC) $(INCLUDE) $(DEFINE) $(X_CFLAGS) -c $< -o $@
 .c.o:
 	$(X_GCC) $(INCLUDE) $(DEFINE) $(X_CFLAGS) -c $< -o $@
+.cc.o:
+	$(X_GPP) $(INCLUDE) $(DEFINE) $(X_CPP_FLAGS) -c $< -o $@
 
 .PHONY: all clean
 
 all: $(OBJ)
-	$(X_GCC) $(X_CFLAGS) $(X_LDFLAGS) $(OBJ) -o $(OUTPUT)
+	$(X_GCC) $(X_CFLAGS) $(X_LDFLAGS) $(OBJ) $(LIB_PATH) $(LIB) -o $(OUTPUT)
 	$(X_OBJCOPY) -O binary $(OUTPUT) $(OUTPUT).bin
 
 clean:

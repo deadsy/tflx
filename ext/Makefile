@@ -92,6 +92,7 @@ $(TFL_TGZ):
 .stamp_tfl: $(TFL_TGZ) .stamp_gcc
 	mkdir -p $(TFL_DIR)
 	tar -C $(TFL_DIR) -zxf $(TFL_TGZ) --strip-components 1
+	patch -b -p1 < ./patches/100-Makefile.patch
 	cd $(TFL_DIR); python3 ./tensorflow/lite/micro/tools/project_generation/create_tflm_tree.py --makefile_options="--no-print-directory" build
 	cp $(TFL_DIR)/tensorflow/lite/micro/tools/project_generation/Makefile $(TFL_DIR)/build
 	$(MAKE) -C $(TFL_DIR)/build \

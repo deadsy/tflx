@@ -1,0 +1,13 @@
+--- ./tfl/tensorflow/lite/micro/tools/project_generation/Makefile.original	2023-06-04 12:03:49.960911219 -0700
++++ ./tfl/tensorflow/lite/micro/tools/project_generation/Makefile	2023-06-04 12:06:01.017870764 -0700
+@@ -64,6 +64,10 @@
+     -DPROJECT_GENERATION \
+     -mthumb \
+     -mlittle-endian \
++    -mcpu=cortex-m4 \
++    -mthumb-interwork \
++    -mfloat-abi=hard \
++    -mfpu=fpv4-sp-d16 \
+     -funsigned-char \
+     -fomit-frame-pointer \
+     -MD \

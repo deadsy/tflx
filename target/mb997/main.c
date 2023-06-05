@@ -160,6 +160,8 @@ void USART2_IRQHandler(void) {
 
 //-----------------------------------------------------------------------------
 
+int tfl_main(void);
+
 int main(void) {
 	int rc;
 
@@ -201,6 +203,8 @@ int main(void) {
 		printf("loop %d %f\n", i, val);
 		val += 0.1f;
 	}
+
+	tfl_main();
 
 	while (1) ;
 
