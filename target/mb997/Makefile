@@ -8,7 +8,7 @@ CMSIS_DIR = $(TOP)/ext/cube/Drivers/CMSIS
 CMSIS_STM32F4_DIR = $(CMSIS_DIR)/Device/ST/STM32F4xx
 TENSORFLOW_DIR = $(TOP)/ext/tfl/build
 
-SRC += $(HAL_DIR)/Src/stm32f4xx_hal.c \
+C_SRC += $(HAL_DIR)/Src/stm32f4xx_hal.c \
 	$(HAL_DIR)/Src/stm32f4xx_hal_rcc.c \
 	$(HAL_DIR)/Src/stm32f4xx_hal_rcc_ex.c \
 	$(HAL_DIR)/Src/stm32f4xx_hal_cortex.c \
@@ -17,25 +17,25 @@ SRC += $(HAL_DIR)/Src/stm32f4xx_hal.c \
 
 # soc library sources
 LIB_DIR = $(TOP)/soc/st/stm32f4/lib
-SRC += $(LIB_DIR)/gpio.c \
+C_SRC += $(LIB_DIR)/gpio.c \
 	$(LIB_DIR)/delay.c \
 	$(LIB_DIR)/usart.c \
 
-#	$(LIB_DIR)/pwm.c \
-# $(LIB_DIR)/i2c.c \
-#	$(LIB_DIR)/i2s.c \
-#	$(LIB_DIR)/dma.c \
-#	$(LIB_DIR)/adc.c \
-#	$(LIB_DIR)/rng.c \
-#	$(LIB_DIR)/spi.c \
+#$(LIB_DIR)/pwm.c \
+#$(LIB_DIR)/i2c.c \
+#$(LIB_DIR)/i2s.c \
+#$(LIB_DIR)/dma.c \
+#$(LIB_DIR)/adc.c \
+#$(LIB_DIR)/rng.c \
+#$(LIB_DIR)/spi.c \
 
 # target sources
 TARGET_DIR = $(TOP)/target/mb997
-SRC += $(TARGET_DIR)/main.c \
+C_SRC += $(TARGET_DIR)/main.c \
 
 # common
 COMMON_DIR = $(TOP)/common
-SRC += $(COMMON_DIR)/logging.c \
+C_SRC += $(COMMON_DIR)/logging.c \
 	$(COMMON_DIR)/debounce.c \
 	$(COMMON_DIR)/rtt/SEGGER_RTT.c \
 	$(COMMON_DIR)/rtt/SEGGER_RTT_printf.c \
@@ -45,10 +45,13 @@ SRC += $(COMMON_DIR)/logging.c \
 
 # application
 APP_DIR = $(TOP)/app
-CPP_SRC += $(APP_DIR)/tfl_main.cc \
+CXX_SRC += $(APP_DIR)/tfl_main.cc \
+	$(APP_DIR)/hello_world_float_model_data.cc \
+	$(APP_DIR)/hello_world_int8_model_data.cc \
 
-OBJ = $(patsubst %.c, %.o, $(SRC))
-OBJ += $(patsubst %.cc, %.o, $(CPP_SRC))
+
+OBJ = $(patsubst %.c, %.o, $(C_SRC))
+OBJ += $(patsubst %.cc, %.o, $(CXX_SRC))
 OBJ += $(TARGET_DIR)/start.o
 
 # include paths
@@ -69,23 +72,30 @@ DEFINE += -DSTDIO_SERIAL
 
 # linker flags
 LDSCRIPT = stm32f407vg_flash.ld
-X_LDFLAGS = -T$(LDSCRIPT) -Wl,-Map,$(OUTPUT).map -Wl,--gc-sections
+LDFLAGS = -T$(LDSCRIPT) -Wl,-Map,$(OUTPUT).map -Wl,--gc-sections
 
 LIB_PATH += -L$(TENSORFLOW_DIR)/gen
 LIB += -ltflm
 
+DEFINE += -DTF_LITE_STATIC_MEMORY
+DEFINE += -DTF_LITE_MCU_DEBUG_LOG
+DEFINE += -DPROJECT_GENERATION
+DEFINE += -DCMSIS_NN
+
+CXXFLAGS += -Wno-unused-parameter # tensor flow lite has some unused parameters
+
 .S.o:
-	$(X_GCC) $(INCLUDE) $(DEFINE) $(X_CFLAGS) -c $< -o $@
+	$(CC) $(INCLUDE) $(DEFINE) $(CFLAGS) -c $< -o $@
 .c.o:
-	$(X_GCC) $(INCLUDE) $(DEFINE) $(X_CFLAGS) -c $< -o $@
+	$(CC) $(INCLUDE) $(DEFINE) $(CFLAGS) -c $< -o $@
 .cc.o:
-	$(X_GPP) $(INCLUDE) $(DEFINE) $(X_CPP_FLAGS) -c $< -o $@
+	$(CXX) $(INCLUDE) $(DEFINE) $(CXXFLAGS) -c $< -o $@
 
 .PHONY: all clean
 
 all: $(OBJ)
-	$(X_GCC) $(X_CFLAGS) $(X_LDFLAGS) $(OBJ) $(LIB_PATH) $(LIB) -o $(OUTPUT)
-	$(X_OBJCOPY) -O binary $(OUTPUT) $(OUTPUT).bin
+	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJ) $(LIB_PATH) $(LIB) -o $(OUTPUT)
+	$(OBJCOPY) -O binary $(OUTPUT) $(OUTPUT).bin
 
 clean:
 	-rm $(OBJ)	
