@@ -76,6 +76,7 @@ LDFLAGS = -T$(LDSCRIPT) -Wl,-Map,$(OUTPUT).map -Wl,--gc-sections
 
 LIB_PATH += -L$(TENSORFLOW_DIR)/gen
 LIB += -ltflm
+LIB += -lstdc++
 
 DEFINE += -DTF_LITE_STATIC_MEMORY
 DEFINE += -DTF_LITE_MCU_DEBUG_LOG
