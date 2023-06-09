@@ -6,3 +6,4 @@ ext/cmsis
 ext/cmsis-nn
 ext/tfl
 ext/cube
+ext/usr

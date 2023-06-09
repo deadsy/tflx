@@ -7,6 +7,7 @@ HAL_DIR = $(TOP)/ext/cube/Drivers/STM32F4xx_HAL_Driver
 CMSIS_DIR = $(TOP)/ext/cube/Drivers/CMSIS
 CMSIS_STM32F4_DIR = $(CMSIS_DIR)/Device/ST/STM32F4xx
 TENSORFLOW_DIR = $(TOP)/ext/tfl/build
+USR_DIR = $(TOP)/ext/usr
 
 C_SRC += $(HAL_DIR)/Src/stm32f4xx_hal.c \
 	$(HAL_DIR)/Src/stm32f4xx_hal_rcc.c \
@@ -74,8 +75,9 @@ DEFINE += -DSTDIO_SERIAL
 LDSCRIPT = stm32f407vg_flash.ld
 LDFLAGS = -T$(LDSCRIPT) -Wl,-Map,$(OUTPUT).map -Wl,--gc-sections
 
-LIB_PATH += -L$(TENSORFLOW_DIR)/gen
+LIB_PATH += -L$(USR_DIR)/lib
 LIB += -ltflm
+LIB += -lcmsis-nn
 LIB += -lstdc++
 
 DEFINE += -DTF_LITE_STATIC_MEMORY

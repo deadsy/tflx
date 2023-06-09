@@ -83,6 +83,8 @@ $(NN_TGZ):
 	cp ./patches/arm-none-eabi-gcc.cmake $(NN_BUILD)
 	PATH=$(GCC_BIN):${PATH} cmake -GNinja -DCMAKE_TOOLCHAIN_FILE=arm-none-eabi-gcc.cmake -S $(NN_DIR) -B $(NN_BUILD)
 	ninja -C $(NN_BUILD)
+	mkdir -p $(USR_DIR)/lib
+	cp $(NN_BUILD)/libcmsis-nn.a $(USR_DIR)/lib
 	touch $@
 
 $(TFL_TGZ):
@@ -93,7 +95,9 @@ $(TFL_TGZ):
 	mkdir -p $(TFL_DIR)
 	tar -C $(TFL_DIR) -zxf $(TFL_TGZ) --strip-components 1
 	patch -b -p1 < ./patches/100-Makefile.patch
-	cd $(TFL_DIR); python3 ./tensorflow/lite/micro/tools/project_generation/create_tflm_tree.py --makefile_options="--no-print-directory" build
+	cd $(TFL_DIR); python3 ./tensorflow/lite/micro/tools/project_generation/create_tflm_tree.py \
+		--makefile_options="--no-print-directory" \
+		build
 	cp $(TFL_DIR)/tensorflow/lite/micro/tools/project_generation/Makefile $(TFL_DIR)/build
 	$(MAKE) -C $(TFL_DIR)/build \
 		BUILD_TYPE=cmsis_nn \
@@ -101,6 +105,8 @@ $(TFL_TGZ):
 		CC=$(GCC_BIN)/arm-none-eabi-gcc \
 		AR=$(GCC_BIN)/arm-none-eabi-ar \
 		libtflm
+	mkdir -p $(USR_DIR)/lib
+	cp $(TFL_DIR)/build/gen/libtflm.a $(USR_DIR)/lib
 	touch $@
 
 $(CUBE_TGZ):

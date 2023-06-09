@@ -23,19 +23,6 @@
 
 //-----------------------------------------------------------------------------
 
-#if 0
-
-void MicroPrintf(const char* format, ...) {
-  va_list args;
-  va_start (args, format);
-  vprintf (format, args);
-  va_end (args);
-}
-
-#endif
-
-//-----------------------------------------------------------------------------
-
 namespace {
 using HelloWorldOpResolver = tflite::MicroMutableOpResolver<1>;
 
@@ -80,11 +67,98 @@ TfLiteStatus ProfileMemoryAndLatency() {
 
 //-----------------------------------------------------------------------------
 
+TfLiteStatus LoadFloatModelAndPerformInference() {
+  const tflite::Model* model =
+      ::tflite::GetModel(g_hello_world_float_model_data);
+  TFLITE_CHECK_EQ(model->version(), TFLITE_SCHEMA_VERSION);
+
+  HelloWorldOpResolver op_resolver;
+  TF_LITE_ENSURE_STATUS(RegisterOps(op_resolver));
+
+  // Arena size just a round number. The exact arena usage can be determined
+  // using the RecordingMicroInterpreter.
+  constexpr int kTensorArenaSize = 3000;
+  uint8_t tensor_arena[kTensorArenaSize];
+
+  tflite::MicroInterpreter interpreter(model, op_resolver, tensor_arena,
+                                       kTensorArenaSize);
+  TF_LITE_ENSURE_STATUS(interpreter.AllocateTensors());
+
+  // Check if the predicted output is within a small range of the
+  // expected output
+  float epsilon = 0.05f;
+  constexpr int kNumTestValues = 4;
+  float golden_inputs[kNumTestValues] = {0.f, 1.f, 3.f, 5.f};
+
+  for (int i = 0; i < kNumTestValues; ++i) {
+    interpreter.input(0)->data.f[0] = golden_inputs[i];
+    TF_LITE_ENSURE_STATUS(interpreter.Invoke());
+    float y_pred = interpreter.output(0)->data.f[0];
+    TFLITE_CHECK_LE(abs(sin(golden_inputs[i]) - y_pred), epsilon);
+  }
+
+  return kTfLiteOk;
+}
+
+//-----------------------------------------------------------------------------
+
+TfLiteStatus LoadQuantModelAndPerformInference() {
+  // Map the model into a usable data structure. This doesn't involve any
+  // copying or parsing, it's a very lightweight operation.
+  const tflite::Model* model =
+      ::tflite::GetModel(g_hello_world_int8_model_data);
+  TFLITE_CHECK_EQ(model->version(), TFLITE_SCHEMA_VERSION);
+
+  HelloWorldOpResolver op_resolver;
+  TF_LITE_ENSURE_STATUS(RegisterOps(op_resolver));
+
+  // Arena size just a round number. The exact arena usage can be determined
+  // using the RecordingMicroInterpreter.
+  constexpr int kTensorArenaSize = 3000;
+  uint8_t tensor_arena[kTensorArenaSize];
+
+  tflite::MicroInterpreter interpreter(model, op_resolver, tensor_arena,
+                                       kTensorArenaSize);
+
+  TF_LITE_ENSURE_STATUS(interpreter.AllocateTensors());
+
+  TfLiteTensor* input = interpreter.input(0);
+  TFLITE_CHECK_NE(input, nullptr);
+
+  TfLiteTensor* output = interpreter.output(0);
+  TFLITE_CHECK_NE(output, nullptr);
+
+  float output_scale = output->params.scale;
+  int output_zero_point = output->params.zero_point;
+
+  // Check if the predicted output is within a small range of the
+  // expected output
+  float epsilon = 0.05;
+
+  constexpr int kNumTestValues = 4;
+  float golden_inputs_float[kNumTestValues] = {0.77, 1.57, 2.3, 3.14};
+
+  // The int8 values are calculated using the following formula
+  // (golden_inputs_float[i] / input->params.scale + input->params.scale)
+  int8_t golden_inputs_int8[kNumTestValues] = {-96, -63, -34, 0};
+
+  for (int i = 0; i < kNumTestValues; ++i) {
+    input->data.int8[0] = golden_inputs_int8[i];
+    TF_LITE_ENSURE_STATUS(interpreter.Invoke());
+    float y_pred = (output->data.int8[0] - output_zero_point) * output_scale;
+    TFLITE_CHECK_LE(abs(sin(golden_inputs_float[i]) - y_pred), epsilon);
+  }
+
+  return kTfLiteOk;
+}
+
+//-----------------------------------------------------------------------------
+
 extern "C" int tfl_main(void) {
   tflite::InitializeTarget();
   TF_LITE_ENSURE_STATUS(ProfileMemoryAndLatency());
-  //TF_LITE_ENSURE_STATUS(LoadFloatModelAndPerformInference());
-  //TF_LITE_ENSURE_STATUS(LoadQuantModelAndPerformInference());
+  TF_LITE_ENSURE_STATUS(LoadFloatModelAndPerformInference());
+  TF_LITE_ENSURE_STATUS(LoadQuantModelAndPerformInference());
   MicroPrintf("~~~ALL TESTS PASSED~~~\n");
   return kTfLiteOk;
 }

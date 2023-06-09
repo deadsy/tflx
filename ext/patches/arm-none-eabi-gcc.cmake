@@ -38,6 +38,10 @@ set(CMAKE_C_COMPILER ${TOOLCHAIN_PREFIX}gcc)
 set(CMAKE_ASM_COMPILER ${CMAKE_C_COMPILER})
 set(CMAKE_CXX_COMPILER ${TOOLCHAIN_PREFIX}g++)
 
+set(CMAKE_C_FLAGS_INIT "-mthumb -mlittle-endian -mthumb-interwork -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS_INIT}" CACHE STRING "" FORCE)
+
+
 # Default C compiler flags
 set(CMAKE_C_FLAGS_DEBUG_INIT "-g3 -Og -Wall -pedantic -DDEBUG")
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG_INIT}" CACHE STRING "" FORCE)

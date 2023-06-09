@@ -197,15 +197,8 @@ int main(void) {
 
 	DBG("init good\r\n");
 
-	float val = 1.234f;
 	printf("\n");
-	for (int i = 0; i < 10; i++) {
-		printf("loop %d %f\n", i, val);
-		val += 0.1f;
-	}
-
 	tfl_main();
-
 	while (1) ;
 
  exit:
