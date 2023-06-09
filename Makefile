@@ -5,11 +5,14 @@ include $(TOP)/mk/common.mk
 TARGET ?= mb997
 
 TARGET_DIR = $(TOP)/target/$(TARGET)
-BIN_FILE = $(TARGET_DIR)/tflx.bin
+BUILD_DIR = $(TARGET_DIR)/build
+BIN_FILE = $(BUILD_DIR)/tflx.bin
 
 .PHONY: all
 all: .stamp_ext
-	make -C $(TARGET_DIR) $@
+	mkdir -p $(BUILD_DIR)
+	cmake -GNinja -S $(TARGET_DIR) -B $(BUILD_DIR)
+	ninja -C $(BUILD_DIR)
 
 .PHONY: program
 program: 
@@ -17,7 +20,7 @@ program:
 
 .PHONY: clean
 clean:
-	make -C $(TARGET_DIR) $@
+	-rm -rf $(BUILD_DIR)
 
 # clean + remove the 3rd party libraries
 .PHONY: clobber
