@@ -1,9 +1,8 @@
 cmake_minimum_required(VERSION 3.22)
-project(tflx)
 
-#set(CMAKE_SYSTEM_NAME Generic)
-#set(CMAKE_SYSTEM_PROCESSOR arm)
-#set(CMAKE_CROSSCOMPILING 1)
+project(tflx
+	LANGUAGES C CXX ASM
+)
 
 set(TOP ${CMAKE_SOURCE_DIR}/../..)
 set(GCC_PATH ${TOP}/ext/gcc/bin)
@@ -14,39 +13,49 @@ set(CMSIS_STM32F4_DIR ${CMSIS_DIR}/Device/ST/STM32F4xx)
 set(SOC_DIR ${TOP}/soc/st/stm32f4/lib)
 set(COMMON_DIR ${TOP}/common)
 
-
 set(CMAKE_C_COMPILER ${GCC_PATH}/arm-none-eabi-gcc)
+set(CMAKE_ASM_COMPILER ${GCC_PATH}/arm-none-eabi-gcc)
 set(CMAKE_CXX_COMPILER ${GCC_PATH}/arm-none-eabi-g++)
 set(CMAKE_C_OBJCOPY ${GCC_PATH}/arm-none-eabi-objcopy)
 set(CMAKE_LINKER ${GCC_PATH}/arm-none-eabi-ld)
 set(CMAKE_AR ${GCC_PATH}/arm-none-eabi-ar)
 
 string(JOIN " " COMMON_FLAGS
-	"-Werror"
-	"-Wall"
-	"-Wextra"
+	"-Werror" # warnings are errors
+	"-Wall" # all warnings
+	"-Wextra" # extra warnings
 	"-fno-unwind-tables"
-	"-ffunction-sections"
-	"-fdata-sections"
-	"-fmessage-length=0"
-	"-mthumb"
-	"-mlittle-endian"
-	"-mthumb-interwork"
-	"-mcpu=cortex-m4"
-	"-mfloat-abi=hard"
-	"-mfpu=fpv4-sp-d16"
-	"-funsigned-char"
-	"-fomit-frame-pointer"
+	"-ffunction-sections" # functions in their own section (link with --gc-sections)
+	"-fdata-sections" # data objects in their own section (link with --gc-sections)
+	"-fmessage-length=0" # single line for message formatting
+	"-mthumb" # generate arm thumb code
+	"-mlittle-endian" # generate little endan code (required?)
+	"-mthumb-interwork" # interwork with non-thumb arm code (required?)
+	"-mcpu=cortex-m4" # build for a cortex m4
+	"-mfloat-abi=hard" # hardware floating point
+	"-mfpu=fpv4-sp-d16" # describe the floating point
+	"-funsigned-char" # chars are unsigned
+	"-fomit-frame-pointer" # omit stack frame pointer
 )
 
 string(JOIN " " CMAKE_C_FLAGS
 	${COMMON_FLAGS}
-	"-Wstrict-prototypes"
-	"-std=c11"
+	"-Wstrict-prototypes" # require strict prototypes
+	"-std=c11" # ISO/IEC 9899:2011 C standard
 )
 
+string(JOIN " " CMAKE_CXX_FLAGS
+	${COMMON_FLAGS}
+	"-std=c++11" # ISO/IEC 14882:2011 C++ standard
+	"-fno-rtti" # no runtime type information
+	"-fno-exceptions" # no exception code
+	"-fno-threadsafe-statics" # don't emit thread safe code for local statics
+)
+
+set(CMAKE_ASM_FLAGS ${CMAKE_C_FLAGS})
 
 add_executable(${PROJECT_NAME}.elf
+	start.S
 	main.c
 
 	${HAL_DIR}/Src/stm32f4xx_hal.c
@@ -67,20 +76,27 @@ add_executable(${PROJECT_NAME}.elf
 	${COMMON_DIR}/syscalls.c
 )
 
-
 target_include_directories(${PROJECT_NAME}.elf PUBLIC
 	${CMAKE_SOURCE_DIR}
 	${SOC_DIR}
 	${HAL_DIR}/Inc
 	${CMSIS_STM32F4_DIR}/Include
 	${CMSIS_DIR}/Include
-	${TOP}/common/rtt
+	${COMMON_DIR}/rtt
 	${COMMON_DIR}
 )
 
 target_compile_definitions(${PROJECT_NAME}.elf PUBLIC
 	STM32F407xx
 	STDIO_SERIAL
+)
+
+set(LDSCRIPT ${CMAKE_SOURCE_DIR}/stm32f407vg_flash.ld)
+
+target_link_options(${PROJECT_NAME}.elf PUBLIC
+	"-T${LDSCRIPT}"
+	"-Wl,-Map,${PROJECT_NAME}.map"
+	"-Wl,--gc-sections"
 )
 
 add_custom_target(${PROJECT_NAME}.bin ALL DEPENDS ${PROJECT_NAME}.elf)
