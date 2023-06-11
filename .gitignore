@@ -6,4 +6,7 @@ ext/cmsis
 ext/cmsis-nn
 ext/tfl
 ext/cube
+ext/ruy
+ext/gemmlowp
+ext/flatbuffers
 ext/usr

@@ -12,6 +12,14 @@ GCC_FILE = arm-gnu-toolchain-$(GCC_VER)-x86_64-arm-none-eabi.tar.xz
 GCC_TXZ = $(DL_DIR)/$(GCC_FILE)
 GCC_DIR = $(TOP)/ext/gcc
 
+# flatbuffers
+FB_VER = a66de58
+FB_URL = https://github.com/google/flatbuffers/tarball/$(FB_VER)
+FB_FILE = flatbuffers-$(FB_VER).tar.gz
+FB_TGZ = $(DL_DIR)/$(FB_FILE)
+FB_DIR = $(TOP)/ext/flatbuffers
+FB_BUILD = $(FB_DIR)/build
+
 # cmsis
 CMSIS_VER = dde5bac
 CMSIS_URL = https://github.com/ARM-software/CMSIS_5/tarball/$(CMSIS_VER)
@@ -33,6 +41,7 @@ TFL_URL = https://github.com/tensorflow/tflite-micro/tarball/$(TFL_VER)
 TFL_FILE = tfl-$(TFL_VER).tar.gz
 TFL_TGZ = $(DL_DIR)/$(TFL_FILE)
 TFL_DIR = $(TOP)/ext/tfl
+TFL_BUILD = $(TFL_DIR)/build
 
 # stm cube library
 CUBE_VER = 1.27.1
@@ -41,8 +50,23 @@ CUBE_FILE = cube-$(CUBE_VER).tar.gz
 CUBE_TGZ = $(DL_DIR)/$(CUBE_FILE)
 CUBE_DIR = $(TOP)/ext/cube
 
+# gemmlowp library
+GML_VER = 719139c
+GML_URL = https://github.com/google/gemmlowp/tarball/$(GML_VER)
+GML_FILE = gemmlowp-$(GML_VER).tar.gz
+GML_TGZ = $(DL_DIR)/$(GML_FILE)
+GML_DIR = $(TOP)/ext/gemmlowp
+
+# ruy library
+RUY_VER = d371283
+RUY_URL = https://github.com/google/ruy/tarball/$(RUY_VER)
+RUY_FILE = ruy-$(RUY_VER).tar.gz
+RUY_TGZ = $(DL_DIR)/$(RUY_FILE)
+RUY_DIR = $(TOP)/ext/ruy
+RUY_BUILD = $(RUY_DIR)/build
+
 .PHONY: all
-all: .stamp_gcc .stamp_cmsis .stamp_nn .stamp_tfl .stamp_cube
+all: .stamp_gcc .stamp_cube .stamp_nn .stamp_flatbuffers .stamp_ruy .stamp_gemmlowp .stamp_tfl
 
 .PHONY: clean
 clean:
@@ -52,7 +76,33 @@ clean:
 	-rm -rf $(NN_DIR)
 	-rm -rf $(TFL_DIR)
 	-rm -rf $(CUBE_DIR)
+	-rm -rf $(FB_DIR)
+	-rm -rf $(GML_DIR)
+	-rm -rf $(RUY_DIR)
 	-rm .stamp_*
+
+$(RUY_TGZ):
+	mkdir -p $(RUY_DIR)
+	wget $(RUY_URL) -O $(RUY_TGZ)
+
+.stamp_ruy: $(RUY_TGZ)
+	mkdir -p $(RUY_DIR)
+	tar -C $(RUY_DIR) -zxf $(RUY_TGZ) --strip-components 1
+	cmake -GNinja \
+		-DCMAKE_INSTALL_PREFIX=$(USR_DIR) \
+		-DRUY_MINIMAL_BUILD=ON \
+		-S $(RUY_DIR) -B $(RUY_BUILD)
+	ninja -v -C $(RUY_BUILD) install
+	touch $@
+
+$(GML_TGZ):
+	mkdir -p $(DL_DIR)
+	wget $(GML_URL) -O $(GML_TGZ)
+
+.stamp_gemmlowp: $(GML_TGZ)
+	mkdir -p $(GML_DIR)
+	tar -C $(GML_DIR) -zxf $(GML_TGZ) --strip-components 1
+	touch $@
 
 $(GCC_TXZ):
 	mkdir -p $(DL_DIR)
@@ -61,6 +111,25 @@ $(GCC_TXZ):
 .stamp_gcc: $(GCC_TXZ)
 	mkdir -p $(GCC_DIR)
 	tar -C $(GCC_DIR) -Jxf $(GCC_TXZ) --strip-components 1
+	touch $@
+
+$(FB_TGZ):
+	mkdir -p $(DL_DIR)
+	wget $(FB_URL) -O $(FB_TGZ)
+
+.stamp_flatbuffers: $(FB_TGZ)
+	mkdir -p $(FB_DIR)
+	tar -C $(FB_DIR) -zxf $(FB_TGZ) --strip-components 1
+	patch -b -p1 < ./patches/100-flatbuffers.patch
+	cp xtools.cmake $(FB_DIR)
+	cmake -GNinja \
+		-DCMAKE_TOOLCHAIN_FILE=xtools.cmake \
+		-DCMAKE_INSTALL_PREFIX=$(USR_DIR) \
+		-DFLATBUFFERS_BUILD_TESTS=OFF \
+		-DFLATBUFFERS_BUILD_FLATC=OFF \
+		-DFLATBUFFERS_BUILD_FLATHASH=OFF \
+		-S $(FB_DIR) -B $(FB_BUILD)
+	ninja -v -C $(FB_BUILD) install
 	touch $@
 
 $(CMSIS_TGZ):
@@ -91,23 +160,28 @@ $(TFL_TGZ):
 	mkdir -p $(DL_DIR)
 	wget $(TFL_URL) -O $(TFL_TGZ)
 
-.stamp_tfl: $(TFL_TGZ) .stamp_gcc
+.stamp_tfl: $(TFL_TGZ) .stamp_gcc .stamp_flatbuffers .stamp_gemmlowp
 	mkdir -p $(TFL_DIR)
 	tar -C $(TFL_DIR) -zxf $(TFL_TGZ) --strip-components 1
-	patch -b -p1 < ./patches/100-Makefile.patch
-	cd $(TFL_DIR); python3 ./tensorflow/lite/micro/tools/project_generation/create_tflm_tree.py \
-		--makefile_options="--no-print-directory" \
-		build
-	cp $(TFL_DIR)/tensorflow/lite/micro/tools/project_generation/Makefile $(TFL_DIR)/build
-	$(MAKE) -C $(TFL_DIR)/build \
-		BUILD_TYPE=cmsis_nn \
-		CXX=$(GCC_BIN)/arm-none-eabi-g++ \
-		CC=$(GCC_BIN)/arm-none-eabi-gcc \
-		AR=$(GCC_BIN)/arm-none-eabi-ar \
-		libtflm
+	cp -r files/tfl/* $(TFL_DIR)
+	mkdir -p $(NN_BUILD)
+	cmake -GNinja -S $(TFL_DIR) -B $(TFL_BUILD)
+	ninja -v -C $(TFL_BUILD)
 	mkdir -p $(USR_DIR)/lib
-	cp $(TFL_DIR)/build/gen/libtflm.a $(USR_DIR)/lib
-	touch $@
+	cp $(TFL_BUILD)/libtfl.a $(USR_DIR)/lib
+	#touch $@
+
+	#patch -b -p1 < ./patches/100-Makefile.patch
+	#cd $(TFL_DIR); python3 ./tensorflow/lite/micro/tools/project_generation/create_tflm_tree.py --makefile_options="--no-print-directory" build
+	#cp $(TFL_DIR)/tensorflow/lite/micro/tools/project_generation/Makefile $(TFL_DIR)/build
+	#$(MAKE) -C $(TFL_DIR)/build \
+	#	BUILD_TYPE=cmsis_nn \
+	#	CXX=$(GCC_BIN)/arm-none-eabi-g++ \
+	#	CC=$(GCC_BIN)/arm-none-eabi-gcc \
+	#	AR=$(GCC_BIN)/arm-none-eabi-ar \
+	#	libtflm
+	#mkdir -p $(USR_DIR)/lib
+	#cp $(TFL_DIR)/build/gen/libtflm.a $(USR_DIR)/lib
 
 $(CUBE_TGZ):
 	mkdir -p $(DL_DIR)

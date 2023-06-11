@@ -1,0 +1,11 @@
+--- ./flatbuffers/src/util.cpp.orig	2022-08-15 16:11:45.000000000 -0700
++++ ./flatbuffers/src/util.cpp	2023-06-09 17:56:28.671543448 -0700
+@@ -208,6 +208,8 @@
+   // clang-format on
+ }
+ 
++#define FLATBUFFERS_NO_ABSOLUTE_PATH_RESOLUTION
++
+ std::string AbsolutePath(const std::string &filepath) {
+   // clang-format off
+ 
