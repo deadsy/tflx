@@ -12,6 +12,7 @@ set(CMAKE_AR ${GCC_PATH}/arm-none-eabi-ar)
 
 set(USR_DIR ${EXT}/usr)
 set(GEMMLOWP_DIR ${EXT}/gemmlowp)
+set(RUY_DIR ${EXT}/ruy)
 
 set(BASE_DIR ${CMAKE_SOURCE_DIR})
 set(TFL_DIR ${BASE_DIR}/tensorflow/lite)
@@ -166,7 +167,6 @@ add_library(${PROJECT_NAME} STATIC
   ${TFL_DIR}/micro/kernels/reshape.cc
   ${TFL_DIR}/micro/kernels/l2norm.cc
   ${TFL_DIR}/micro/kernels/dequantize.cc
-
 )
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC
@@ -179,7 +179,7 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC
 target_include_directories(${PROJECT_NAME} PUBLIC
   ${BASE_DIR}
   ${USR_DIR}/include
-  ${GEMMLOWP_DIR}
+  ${RUY_DIR}
 )
 
 string(JOIN " " COMMON_FLAGS

@@ -160,7 +160,7 @@ void USART2_IRQHandler(void) {
 
 //-----------------------------------------------------------------------------
 
-//int tfl_main(void);
+int tfl_main(void);
 
 int main(void) {
 	int rc;
@@ -198,7 +198,7 @@ int main(void) {
 	DBG("init good\r\n");
 
 	printf("\nhere we are\n");
-	//tfl_main();
+	tfl_main();
 	while (1) ;
 
  exit:

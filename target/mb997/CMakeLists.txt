@@ -12,6 +12,9 @@ set(CMSIS_DIR ${TOP}/ext/cube/Drivers/CMSIS)
 set(CMSIS_STM32F4_DIR ${CMSIS_DIR}/Device/ST/STM32F4xx)
 set(SOC_DIR ${TOP}/soc/st/stm32f4/lib)
 set(COMMON_DIR ${TOP}/common)
+set(APP_DIR ${TOP}/app)
+set(TFL_DIR ${TOP}/ext/tfl)
+set(USR_DIR ${TOP}/ext/usr)
 
 set(CMAKE_C_COMPILER ${GCC_PATH}/arm-none-eabi-gcc)
 set(CMAKE_ASM_COMPILER ${GCC_PATH}/arm-none-eabi-gcc)
@@ -50,6 +53,7 @@ string(JOIN " " CMAKE_CXX_FLAGS
 	"-fno-rtti" # no runtime type information
 	"-fno-exceptions" # no exception code
 	"-fno-threadsafe-statics" # don't emit thread safe code for local statics
+	"-Wno-unused-parameter"
 )
 
 set(CMAKE_ASM_FLAGS ${CMAKE_C_FLAGS})
@@ -74,6 +78,13 @@ add_executable(${PROJECT_NAME}.elf
 	${COMMON_DIR}/rtt/SEGGER_RTT.c
 	${COMMON_DIR}/rtt/SEGGER_RTT_printf.c
 	${COMMON_DIR}/syscalls.c
+
+	${APP_DIR}/hello_world_float_model_data.cc
+	${APP_DIR}/hello_world_int8_model_data.cc
+	${APP_DIR}/tfl_main.cc
+	#${APP_DIR}/debug_log.cc
+  #${APP_DIR}/micro_time.cc
+  #${APP_DIR}/system_setup.cc
 )
 
 target_include_directories(${PROJECT_NAME}.elf PUBLIC
@@ -84,11 +95,17 @@ target_include_directories(${PROJECT_NAME}.elf PUBLIC
 	${CMSIS_DIR}/Include
 	${COMMON_DIR}/rtt
 	${COMMON_DIR}
+	${TFL_DIR}
+	${USR_DIR}/include
 )
 
 target_compile_definitions(${PROJECT_NAME}.elf PUBLIC
 	STM32F407xx
 	STDIO_SERIAL
+)
+
+target_link_libraries(${PROJECT_NAME}.elf PUBLIC
+	${USR_DIR}/lib/libtfl.a
 )
 
 set(LDSCRIPT ${CMAKE_SOURCE_DIR}/stm32f407vg_flash.ld)
