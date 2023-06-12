@@ -10,3 +10,4 @@ ext/ruy
 ext/gemmlowp
 ext/flatbuffers
 ext/usr
+target/mb997/build

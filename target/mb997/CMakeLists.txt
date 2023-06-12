@@ -68,8 +68,9 @@ set(LDSCRIPT ${CMAKE_SOURCE_DIR}/stm32f407vg_flash.ld)
 
 target_link_options(${PROJECT_NAME}.elf PUBLIC
 	"-T${LDSCRIPT}"
-	"-Wl,-Map,${PROJECT_NAME}.map"
-	"-Wl,--gc-sections"
+	"-Wl,-Map,${PROJECT_NAME}.map" # create a map file
+	"-Wl,--gc-sections" # remove unused sections
+	"-Wl,--no-warn-rwx-segments" # Supress warning: https://github.com/raspberrypi/pico-sdk/issues/1029 
 )
 
 add_custom_target(${PROJECT_NAME}.bin ALL DEPENDS ${PROJECT_NAME}.elf)

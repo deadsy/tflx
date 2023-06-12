@@ -1,7 +1,5 @@
 TOP = .
 
-include $(TOP)/mk/common.mk
-
 TARGET ?= mb997
 
 TARGET_DIR = $(TOP)/target/$(TARGET)
