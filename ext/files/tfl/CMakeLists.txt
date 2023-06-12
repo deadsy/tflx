@@ -1,15 +1,12 @@
-cmake_minimum_required(VERSION 3.22)
+cmake_minimum_required(VERSION 3.21)
 
 project(tfl
   LANGUAGES CXX
 )
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter")
+
 set(EXT ${CMAKE_SOURCE_DIR}/..)
-
-set(GCC_PATH ${EXT}/gcc/bin)
-set(CMAKE_CXX_COMPILER ${GCC_PATH}/arm-none-eabi-g++)
-set(CMAKE_AR ${GCC_PATH}/arm-none-eabi-ar)
-
 set(USR_DIR ${EXT}/usr)
 set(GEMMLOWP_DIR ${EXT}/gemmlowp)
 set(RUY_DIR ${EXT}/ruy)
@@ -180,31 +177,4 @@ target_include_directories(${PROJECT_NAME} PUBLIC
   ${BASE_DIR}
   ${USR_DIR}/include
   ${RUY_DIR}
-)
-
-string(JOIN " " COMMON_FLAGS
-	"-Werror" # warnings are errors
-	"-Wall" # all warnings
-	"-Wextra" # extra warnings
-	"-fno-unwind-tables"
-	"-ffunction-sections" # functions in their own section (link with --gc-sections)
-	"-fdata-sections" # data objects in their own section (link with --gc-sections)
-	"-fmessage-length=0" # single line for message formatting
-	"-mthumb" # generate arm thumb code
-	"-mlittle-endian" # generate little endan code (required?)
-	"-mthumb-interwork" # interwork with non-thumb arm code (required?)
-	"-mcpu=cortex-m4" # build for a cortex m4
-	"-mfloat-abi=hard" # hardware floating point
-	"-mfpu=fpv4-sp-d16" # describe the floating point
-	"-funsigned-char" # chars are unsigned
-	"-fomit-frame-pointer" # omit stack frame pointer
-)
-
-string(JOIN " " CMAKE_CXX_FLAGS
-	${COMMON_FLAGS}
-	"-std=c++11" # ISO/IEC 14882:2011 C++ standard
-	"-fno-rtti" # no runtime type information
-	"-fno-exceptions" # no exception code
-	"-fno-threadsafe-statics" # don't emit thread safe code for local statics
-	"-Wno-unused-parameter"
 )

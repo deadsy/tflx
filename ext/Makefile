@@ -6,7 +6,8 @@ TOP = ..
 CURRENT_DIR = $(shell pwd)
 DL_DIR = $(TOP)/dl
 USR_DIR = $(CURRENT_DIR)/usr
-GCC_BIN = $(CURRENT_DIR)/gcc/bin
+FILES_DIR = $(CURRENT_DIR)/files
+TOOLCHAIN = $(CURRENT_DIR)/../mk/toolchain_arm_cm4.cmake
 
 .PHONY: all
 all: .stamp_gcc .stamp_cube .stamp_tfl
@@ -100,13 +101,12 @@ $(FB_TGZ):
 	mkdir -p $(DL_DIR)
 	wget $(FB_URL) -O $(FB_TGZ)
 
-.stamp_flatbuffers: $(FB_TGZ)
+.stamp_flatbuffers: $(FB_TGZ) .stamp_gcc
 	mkdir -p $(FB_DIR)
 	tar -C $(FB_DIR) -zxf $(FB_TGZ) --strip-components 1
 	patch -b -p1 < ./patches/100-flatbuffers.patch
-	cp xtools.cmake $(FB_DIR)
 	cmake -GNinja \
-		-DCMAKE_TOOLCHAIN_FILE=xtools.cmake \
+		-DCMAKE_TOOLCHAIN_FILE=$(TOOLCHAIN) \
 		-DCMAKE_INSTALL_PREFIX=$(USR_DIR) \
 		-DFLATBUFFERS_BUILD_TESTS=OFF \
 		-DFLATBUFFERS_BUILD_FLATC=OFF \
@@ -154,7 +154,9 @@ $(NN_TGZ):
 	tar -C $(NN_DIR) -zxf $(NN_TGZ) --strip-components 1
 	mkdir -p $(NN_BUILD)
 	cp ./patches/arm-none-eabi-gcc.cmake $(NN_BUILD)
-	PATH=$(GCC_BIN):${PATH} cmake -GNinja -DCMAKE_TOOLCHAIN_FILE=arm-none-eabi-gcc.cmake -S $(NN_DIR) -B $(NN_BUILD)
+	cmake -GNinja \
+		-DCMAKE_TOOLCHAIN_FILE=$(TOOLCHAIN) \
+		-S $(NN_DIR) -B $(NN_BUILD)
 	ninja -C $(NN_BUILD)
 	mkdir -p $(USR_DIR)/lib
 	cp $(NN_BUILD)/libcmsis-nn.a $(USR_DIR)/lib
@@ -180,8 +182,9 @@ $(TFL_TGZ):
 	mkdir -p $(TFL_DIR)
 	tar -C $(TFL_DIR) -zxf $(TFL_TGZ) --strip-components 1
 	cp -r files/tfl/* $(TFL_DIR)
-	mkdir -p $(NN_BUILD)
-	cmake -GNinja -S $(TFL_DIR) -B $(TFL_BUILD)
+	cmake -GNinja \
+		-DCMAKE_TOOLCHAIN_FILE=$(TOOLCHAIN) \
+		-S $(TFL_DIR) -B $(TFL_BUILD)
 	ninja -C $(TFL_BUILD)
 	mkdir -p $(USR_DIR)/lib
 	cp $(TFL_BUILD)/libtfl.a $(USR_DIR)/lib

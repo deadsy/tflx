@@ -7,11 +7,14 @@ TARGET ?= mb997
 TARGET_DIR = $(TOP)/target/$(TARGET)
 BUILD_DIR = $(TARGET_DIR)/build
 BIN_FILE = $(BUILD_DIR)/tflx.bin
+TOOLCHAIN = $(PWD)/mk/toolchain_arm_cm4.cmake
 
 .PHONY: all
 all: .stamp_ext
 	mkdir -p $(BUILD_DIR)
-	cmake -GNinja -S $(TARGET_DIR) -B $(BUILD_DIR)
+	cmake -GNinja \
+		-DCMAKE_TOOLCHAIN_FILE=$(TOOLCHAIN) \
+		-S $(TARGET_DIR) -B $(BUILD_DIR)
 	ninja -C $(BUILD_DIR)
 
 .PHONY: program
