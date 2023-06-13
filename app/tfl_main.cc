@@ -12,6 +12,7 @@
 #include "tensorflow/lite/core/c/common.h"
 #include "tensorflow/lite/micro/micro_interpreter.h"
 #include "tensorflow/lite/micro/micro_log.h"
+#include "tensorflow/lite/micro/micro_time.h"
 #include "tensorflow/lite/micro/micro_mutable_op_resolver.h"
 #include "tensorflow/lite/micro/micro_profiler.h"
 #include "tensorflow/lite/micro/recording_micro_interpreter.h"
@@ -156,10 +157,12 @@ TfLiteStatus LoadQuantModelAndPerformInference() {
 
 extern "C" int tfl_main(void) {
   tflite::InitializeTarget();
+
   TF_LITE_ENSURE_STATUS(ProfileMemoryAndLatency());
   TF_LITE_ENSURE_STATUS(LoadFloatModelAndPerformInference());
   TF_LITE_ENSURE_STATUS(LoadQuantModelAndPerformInference());
   MicroPrintf("~~~ALL TESTS PASSED~~~\n");
+
   return kTfLiteOk;
 }
 

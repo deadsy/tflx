@@ -20,6 +20,7 @@ set(USR_DIR ${TOP}/ext/usr)
 add_executable(${PROJECT_NAME}.elf
 	start.S
 	main.c
+	micro_time.cc
 
 	${HAL_DIR}/Src/stm32f4xx_hal.c
 	${HAL_DIR}/Src/stm32f4xx_hal_rcc.c
@@ -70,7 +71,7 @@ target_link_options(${PROJECT_NAME}.elf PUBLIC
 	"-T${LDSCRIPT}"
 	"-Wl,-Map,${PROJECT_NAME}.map" # create a map file
 	"-Wl,--gc-sections" # remove unused sections
-	"-Wl,--no-warn-rwx-segments" # Supress warning: https://github.com/raspberrypi/pico-sdk/issues/1029 
+	"-Wl,--no-warn-rwx-segments" # Supress warning: https://github.com/raspberrypi/pico-sdk/issues/1029
 )
 
 add_custom_target(${PROJECT_NAME}.bin ALL DEPENDS ${PROJECT_NAME}.elf)

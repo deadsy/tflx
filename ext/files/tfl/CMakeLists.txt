@@ -17,7 +17,7 @@ set(TFL_DIR ${BASE_DIR}/tensorflow/lite)
 add_library(${PROJECT_NAME} STATIC
 
   ${TFL_DIR}/micro/debug_log.cc
-  ${TFL_DIR}/micro/micro_time.cc
+  #${TFL_DIR}/micro/micro_time.cc
   ${TFL_DIR}/micro/system_setup.cc
 
   ${TFL_DIR}/kernels/kernel_util.cc

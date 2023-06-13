@@ -196,8 +196,8 @@ int main(void) {
 	NVIC_EnableIRQ(USART2_IRQn);
 
 	DBG("init good\r\n");
+	printf("\n%s, line %d\n", __FILE__, __LINE__);
 
-	printf("\nhere we are\n");
 	tfl_main();
 	while (1) ;
 
