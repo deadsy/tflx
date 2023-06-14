@@ -59,6 +59,8 @@ target_include_directories(${PROJECT_NAME}.elf PUBLIC
 target_compile_definitions(${PROJECT_NAME}.elf PUBLIC
 	STM32F407xx
 	STDIO_SERIAL
+	TF_LITE_STATIC_MEMORY
+	TF_LITE_MCU_DEBUG_LOG
 )
 
 target_link_libraries(${PROJECT_NAME}.elf PUBLIC
