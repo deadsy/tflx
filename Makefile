@@ -19,6 +19,10 @@ all: .stamp_ext
 program: 
 	st-flash write $(BIN_FILE) 0x08000000
 
+.PHONY: format
+format: 
+	./tools/cfmt.py
+
 .PHONY: clean
 clean:
 	-rm -rf $(BUILD_DIR)

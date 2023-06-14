@@ -1,26 +1,22 @@
 //-----------------------------------------------------------------------------
 
-
-
-
 //-----------------------------------------------------------------------------
 
-#include <stdio.h>
-#include <stdarg.h>
 #include <math.h>
-
-#include "tensorflow/lite/core/c/common.h"
-#include "tensorflow/lite/micro/micro_interpreter.h"
-#include "tensorflow/lite/micro/micro_log.h"
-#include "tensorflow/lite/micro/micro_time.h"
-#include "tensorflow/lite/micro/micro_mutable_op_resolver.h"
-#include "tensorflow/lite/micro/micro_profiler.h"
-#include "tensorflow/lite/micro/recording_micro_interpreter.h"
-#include "tensorflow/lite/micro/system_setup.h"
-#include "tensorflow/lite/schema/schema_generated.h"
+#include <stdarg.h>
+#include <stdio.h>
 
 #include "hello_world_float_model_data.h"
 #include "hello_world_int8_model_data.h"
+#include "tensorflow/lite/core/c/common.h"
+#include "tensorflow/lite/micro/micro_interpreter.h"
+#include "tensorflow/lite/micro/micro_log.h"
+#include "tensorflow/lite/micro/micro_mutable_op_resolver.h"
+#include "tensorflow/lite/micro/micro_profiler.h"
+#include "tensorflow/lite/micro/micro_time.h"
+#include "tensorflow/lite/micro/recording_micro_interpreter.h"
+#include "tensorflow/lite/micro/system_setup.h"
+#include "tensorflow/lite/schema/schema_generated.h"
 
 //-----------------------------------------------------------------------------
 
@@ -46,12 +42,10 @@ TfLiteStatus ProfileMemoryAndLatency() {
   uint8_t tensor_arena[kTensorArenaSize];
   constexpr int kNumResourceVariables = 24;
 
-  tflite::RecordingMicroAllocator* allocator(
-      tflite::RecordingMicroAllocator::Create(tensor_arena, kTensorArenaSize));
+  tflite::RecordingMicroAllocator* allocator(tflite::RecordingMicroAllocator::Create(tensor_arena, kTensorArenaSize));
   tflite::RecordingMicroInterpreter interpreter(
       tflite::GetModel(g_hello_world_float_model_data), op_resolver, allocator,
-      tflite::MicroResourceVariables::Create(allocator, kNumResourceVariables),
-      &profiler);
+      tflite::MicroResourceVariables::Create(allocator, kNumResourceVariables), &profiler);
 
   TF_LITE_ENSURE_STATUS(interpreter.AllocateTensors());
   TFLITE_CHECK_EQ(interpreter.inputs_size(), 1);
@@ -69,8 +63,7 @@ TfLiteStatus ProfileMemoryAndLatency() {
 //-----------------------------------------------------------------------------
 
 TfLiteStatus LoadFloatModelAndPerformInference() {
-  const tflite::Model* model =
-      ::tflite::GetModel(g_hello_world_float_model_data);
+  const tflite::Model* model = ::tflite::GetModel(g_hello_world_float_model_data);
   TFLITE_CHECK_EQ(model->version(), TFLITE_SCHEMA_VERSION);
 
   HelloWorldOpResolver op_resolver;
@@ -81,8 +74,7 @@ TfLiteStatus LoadFloatModelAndPerformInference() {
   constexpr int kTensorArenaSize = 3000;
   uint8_t tensor_arena[kTensorArenaSize];
 
-  tflite::MicroInterpreter interpreter(model, op_resolver, tensor_arena,
-                                       kTensorArenaSize);
+  tflite::MicroInterpreter interpreter(model, op_resolver, tensor_arena, kTensorArenaSize);
   TF_LITE_ENSURE_STATUS(interpreter.AllocateTensors());
 
   // Check if the predicted output is within a small range of the
@@ -106,8 +98,7 @@ TfLiteStatus LoadFloatModelAndPerformInference() {
 TfLiteStatus LoadQuantModelAndPerformInference() {
   // Map the model into a usable data structure. This doesn't involve any
   // copying or parsing, it's a very lightweight operation.
-  const tflite::Model* model =
-      ::tflite::GetModel(g_hello_world_int8_model_data);
+  const tflite::Model* model = ::tflite::GetModel(g_hello_world_int8_model_data);
   TFLITE_CHECK_EQ(model->version(), TFLITE_SCHEMA_VERSION);
 
   HelloWorldOpResolver op_resolver;
@@ -118,8 +109,7 @@ TfLiteStatus LoadQuantModelAndPerformInference() {
   constexpr int kTensorArenaSize = 3000;
   uint8_t tensor_arena[kTensorArenaSize];
 
-  tflite::MicroInterpreter interpreter(model, op_resolver, tensor_arena,
-                                       kTensorArenaSize);
+  tflite::MicroInterpreter interpreter(model, op_resolver, tensor_arena, kTensorArenaSize);
 
   TF_LITE_ENSURE_STATUS(interpreter.AllocateTensors());
 

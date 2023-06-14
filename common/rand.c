@@ -15,10 +15,10 @@ Based on a linear congruential generator.
 uint32_t rand_state;
 
 void rand_init(uint32_t seed) {
-	if (seed == 0) {
-		seed = 1;
-	}
-	rand_state = seed;
+  if (seed == 0) {
+    seed = 1;
+  }
+  rand_state = seed;
 }
 
 //-----------------------------------------------------------------------------

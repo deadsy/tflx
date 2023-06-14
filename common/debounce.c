@@ -15,18 +15,18 @@ an off (DEBOUNCE_COUNT 0's).
 */
 //-----------------------------------------------------------------------------
 
-#include <string.h>
-
 #include "debounce.h"
+
+#include <string.h>
 
 //-----------------------------------------------------------------------------
 
 #define DEBOUNCE_COUNT 4
 
 struct debounce_ctrl {
-	uint32_t sample[DEBOUNCE_COUNT];
-	uint32_t state;
-	int idx;
+  uint32_t sample[DEBOUNCE_COUNT];
+  uint32_t state;
+  int idx;
 };
 
 static struct debounce_ctrl debounce;
@@ -35,26 +35,20 @@ static int debounce_ready = 0;
 //-----------------------------------------------------------------------------
 // null on/off handlers - to be provided by other code
 
-__attribute__((weak))
-void debounce_on_handler(uint32_t bits) {
-	(void)bits;
-}
+__attribute__((weak)) void debounce_on_handler(uint32_t bits) { (void)bits; }
 
-__attribute__((weak))
-void debounce_off_handler(uint32_t bits) {
-	(void)bits;
-}
+__attribute__((weak)) void debounce_off_handler(uint32_t bits) { (void)bits; }
 
 //-----------------------------------------------------------------------------
 // return the de-bounced state of the switches
 
 static uint32_t debounce_rd(void) {
-	uint32_t state = 0;
-	int i;
-	for (i = 0; i < DEBOUNCE_COUNT; i++) {
-		state |= debounce.sample[i];
-	}
-	return state;
+  uint32_t state = 0;
+  int i;
+  for (i = 0; i < DEBOUNCE_COUNT; i++) {
+    state |= debounce.sample[i];
+  }
+  return state;
 }
 
 //-----------------------------------------------------------------------------
@@ -62,37 +56,37 @@ static uint32_t debounce_rd(void) {
 // this is called periodically (10-20ms) from a timer ISR
 
 void debounce_isr(void) {
-	struct debounce_ctrl *db = &debounce;
-	uint32_t state;
+  struct debounce_ctrl *db = &debounce;
+  uint32_t state;
 
-	if (!debounce_ready) {
-		return;
-	}
-	// read and store the current input
-	db->sample[db->idx] = debounce_input();
-	db->idx = (db->idx == DEBOUNCE_COUNT - 1) ? 0 : db->idx + 1;
+  if (!debounce_ready) {
+    return;
+  }
+  // read and store the current input
+  db->sample[db->idx] = debounce_input();
+  db->idx = (db->idx == DEBOUNCE_COUNT - 1) ? 0 : db->idx + 1;
 
-	state = debounce_rd();
+  state = debounce_rd();
 
-	if (state != db->state) {
-		uint32_t on_bits = ~db->state & state;	// 0 to 1: switch is now ON
-		uint32_t off_bits = db->state & ~state;	// 1 to 0: switch is now OFF
-		if (on_bits) {
-			debounce_on_handler(on_bits);
-		}
-		if (off_bits) {
-			debounce_off_handler(off_bits);
-		}
-		db->state = state;
-	}
+  if (state != db->state) {
+    uint32_t on_bits = ~db->state & state;   // 0 to 1: switch is now ON
+    uint32_t off_bits = db->state & ~state;  // 1 to 0: switch is now OFF
+    if (on_bits) {
+      debounce_on_handler(on_bits);
+    }
+    if (off_bits) {
+      debounce_off_handler(off_bits);
+    }
+    db->state = state;
+  }
 }
 
 //-----------------------------------------------------------------------------
 
 int debounce_init(void) {
-	memset(&debounce, 0, sizeof(struct debounce_ctrl));
-	debounce_ready = 1;
-	return 0;
+  memset(&debounce, 0, sizeof(struct debounce_ctrl));
+  debounce_ready = 1;
+  return 0;
 }
 
 //-----------------------------------------------------------------------------
